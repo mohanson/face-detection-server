@@ -10,12 +10,14 @@
 
 #include "faced.h"
 
+#include <cstring>
+#include <string>
+
 using namespace std;
 
-const char* FaceDetection(char* path) {
+extern seeta::FaceDetection detector("/src/SeetaFaceEngine/FaceDetection/model/seeta_fd_frontal_v1.0.bin");
 
-    seeta::FaceDetection detector("/src/SeetaFaceEngine/FaceDetection/model/seeta_fd_frontal_v1.0.bin");
-
+const char* FaceDetect(char* path) {
     detector.SetMinFaceSize(40);
     detector.SetScoreThresh(2.f);
     detector.SetImagePyramidScaleFactor(0.8f);
@@ -37,9 +39,9 @@ const char* FaceDetection(char* path) {
 
     std::vector<seeta::FaceInfo> faces = detector.Detect(img_data);
 
-    Json::Value resp;
-    resp["size"].append(Json::Value(img_data.width));
-    resp["size"].append(Json::Value(img_data.height));
+    Json::Value root;
+    root["size"].append(Json::Value(img_data.width));
+    root["size"].append(Json::Value(img_data.height));
 
     int32_t num_face = static_cast<int32_t>(faces.size());
 
@@ -49,8 +51,10 @@ const char* FaceDetection(char* path) {
         innerResp["y"] = Json::Value(faces[i].bbox.y);
         innerResp["width"] = Json::Value(faces[i].bbox.width);
         innerResp["height"] = Json::Value(faces[i].bbox.height);
-        resp["faces"].append(Json::Value(innerResp));
+        root["face"].append(Json::Value(innerResp));
     }
 
-    return resp.toStyledString().c_str();
+    char *out = new char[root.toStyledString().length() + 1];
+    std::strcpy(out, root.toStyledString().c_str());
+    return (const char*)out;
 }

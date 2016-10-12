@@ -4,6 +4,6 @@
 using namespace std;
 
 int main(int argc, char** argv) {
-    cout << FaceDetection(argv[1]) << endl;
+    cout << FaceDetect(argv[1]) << endl;
     return 0;
 }
