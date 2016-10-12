@@ -77,7 +77,7 @@ func (Handler *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(404)
 }
 
-func HandlerHome(w http.ResponseWriter, r *http.Request) {
+func HandlerRoot(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(200)
 	w.Write([]byte(fmt.Sprintf("<center><h1>200 Service Available</h1></center>"+
@@ -97,12 +97,24 @@ func HandlerDetectionUpload(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	if _, err := io.Copy(f, r.Body); err != nil {
+	_, err = io.Copy(f, r.Body)
+	if err != nil {
 		http.Error(w, err.Error(), 500)
+		f.Close()
 		return
 	}
 	f.Close()
 	defer os.Remove(f.Name())
+
+	fileinfo, err := os.Stat(f.Name())
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	if fileinfo.Size() > 1024*1024*8 {
+		http.Error(w, "File size limit exceeded [8MB]", 400)
+		return
+	}
 
 	dr := FaceDetect(f.Name())
 	if dr.Size[0] == 0 && dr.Size[1] == 0 {
@@ -119,7 +131,7 @@ func HandlerDetectionUpload(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	Handler := NewHandler()
-	Handler.Bind("/", HandlerHome)
+	Handler.Bind("/", HandlerRoot)
 	Handler.Bind("/detection/upload", HandlerDetectionUpload)
 	server := http.Server{
 		Addr:    ":" + Port,
