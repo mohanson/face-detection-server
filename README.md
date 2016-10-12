@@ -6,8 +6,11 @@
 
 # Requirements
 
+please install them _yourself_.
+
 - cmake3
 - opencv
+- jsoncpp
 
 # Build and Usage
 
